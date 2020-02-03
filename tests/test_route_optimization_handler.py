@@ -1,9 +1,8 @@
 from unittest import TestCase
 from unittest import mock
 import pandas as pd
-from route_optimization.route_optimization_handler import ID, ORIGIN, DESTINATION, DEPARTURE, ARRIVAL, \
-    RouteOptimizationHandler
-from route_optimization.route_utils import InvalidVehicleError
+from route_optimization.route_optimization_handler import RouteOptimizationHandler
+from route_optimization.route_utils import *
 
 
 class TestRouteOptimizationHandler(TestCase):

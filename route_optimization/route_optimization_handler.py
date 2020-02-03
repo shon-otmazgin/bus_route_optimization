@@ -3,25 +3,9 @@ import logging
 import pandas as pd
 import numpy as np
 import random
-from itertools import tee
 import math
 
-from route_optimization.route_utils import InvalidVehicleError
-
-ID = 'Id'
-ORIGIN = 'Origin'
-DESTINATION = 'Destination'
-DEPARTURE = 'Departure'
-ARRIVAL = 'Arrival'
-FORMAT = '%(asctime)s: %(message)s'
-DEADHEAD = 15
-
-
-def pairwise(iterable):
-    """s -> (s0,s1), (s1,s2), (s2, s3), ..."""
-    a, b = tee(iterable)
-    next(b, None)
-    return zip(a, b)
+from route_optimization.route_utils import *
 
 
 class RouteOptimizationHandler:
