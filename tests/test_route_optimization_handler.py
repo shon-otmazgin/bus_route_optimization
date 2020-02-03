@@ -1,6 +1,7 @@
 from unittest import TestCase
 from unittest import mock
 import pandas as pd
+import numpy as np
 from route_optimization.route_optimization_handler import RouteOptimizationHandler
 from route_optimization.route_utils import *
 
@@ -70,6 +71,24 @@ class TestRouteOptimizationHandler(TestCase):
 
     def test_get_schedule_OpEx_invalid_schedule(self):
         self.assertRaises(InvalidScheduleError, RouteOptimizationHandler.get_schedule_OpEx, self.target, [[1, 27], [28]])
+
+    def test_get_matrices(self):
+        neighbors_matrix, penalty_matrix = self.target.get_matrices()
+        expected_neighbors_matrix = pd.DataFrame(False,
+                                                 index=self.dummy_routes_df.index,
+                                                 columns=self.dummy_routes_df.index)
+        expected_penalty_matrix = pd.DataFrame(np.nan,
+                                               index=self.dummy_routes_df.index,
+                                               columns=self.dummy_routes_df.index)
+        for i in expected_neighbors_matrix.index:
+            for j in expected_neighbors_matrix.columns:
+                pair = self.target.valid_pair(id_1=i, id_2=j)
+                expected_neighbors_matrix.loc[i, j] = pair
+                if pair:
+                    expected_penalty_matrix.loc[i, j] = self.target.get_deadhead(id_1=i, id_2=j)
+
+        self.assertTrue(expr=neighbors_matrix.equals(expected_neighbors_matrix))
+        self.assertTrue(expr=expected_penalty_matrix.equals(expected_penalty_matrix))
 
     def test_t(self):
         result = self.target.valid_vehicle(vehicle=[])

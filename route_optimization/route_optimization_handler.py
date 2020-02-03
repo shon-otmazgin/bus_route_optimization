@@ -58,6 +58,24 @@ class RouteOptimizationHandler:
             raise InvalidScheduleError(f'Schedule {schedule} is invalid')
         return sum([self.deadhead_duration(vehicle) for vehicle in schedule])
 
+    def get_N(self):
+        return self.N
+
+    def get_matrices(self):
+        neighbors_matrix = pd.DataFrame(False, index=self.routes_df.index, columns=self.routes_df.index)
+        penalty_matrix = pd.DataFrame(np.nan, index=self.routes_df.index, columns=self.routes_df.index)
+
+        u_triu_indices = np.triu_indices(neighbors_matrix.shape[0], 1)
+        for i, j in zip(u_triu_indices[0], u_triu_indices[1]):
+            pair = self.valid_pair(id_1=neighbors_matrix.index[i],
+                                   id_2=neighbors_matrix.columns[j])
+            neighbors_matrix.iloc[i, j] = pair
+            if pair:
+                penalty_matrix.iloc[i, j] = self.get_deadhead(id_1=penalty_matrix.index[i],
+                                                              id_2=penalty_matrix.columns[j])
+
+        return neighbors_matrix, penalty_matrix
+
 
 
 
