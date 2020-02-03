@@ -1,0 +1,2 @@
+class InvalidVehicleError(Exception):
+    pass
