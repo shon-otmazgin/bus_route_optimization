@@ -13,6 +13,7 @@ setup(
     description='route_optimization',
     python_requires='>=3.6',
     install_requires=[
-
+        'pandas>=0.25.1',
+        'numpy>=1.16.5'
     ]
 )
