@@ -13,7 +13,7 @@ class TestRouteOptimizationHandler(TestCase):
                                             columns=[ORIGIN, DESTINATION, DEPARTURE, ARRIVAL],
                                             index=[1, 27, 28])
 
-        self.target = RouteOptimizationHandler(routes_df=self.dummy_routes_df, restricted_time=10)
+        self.target = RouteOptimizationHandler(routes_df=self.dummy_routes_df, restricted_time=210)
 
     def test_get_deadheads(self):
         result = self.target.get_deadhead(id_1=1, id_2=27)
@@ -37,6 +37,14 @@ class TestRouteOptimizationHandler(TestCase):
         result = self.target.valid_vehicle(vehicle=[1, 27, 28])
         self.assertTrue(expr=result)
         result = self.target.valid_vehicle(vehicle=[1, 28, 27])
+        self.assertFalse(expr=result)
+
+    def test_restricted_vehicle(self):
+        result = self.target.restricted_vehicle(vehicle=[1, 27, 28])
+        self.assertFalse(expr=result)
+        result = self.target.restricted_vehicle(vehicle=[27, 28])
+        self.assertTrue(expr=result)
+        result = self.target.restricted_vehicle(vehicle=[1, 28, 27])
         self.assertFalse(expr=result)
 
     def test_deadhead_duration(self):
