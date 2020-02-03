@@ -39,13 +39,19 @@ class RouteOptimizationHandler:
             duration += self.get_deadhead(id_1=trip_1, id_2=trip_2)
         return duration
 
-    def restricted_vehicle(self, vehicle):
+    def restricted_vehicle(self, vehicle: list) -> bool:
         if not self.valid_vehicle(vehicle=vehicle):
             return False
         duration = self.deadhead_duration(vehicle=vehicle)
         for trip in vehicle:
             duration += self.routes_df.loc[trip][ARRIVAL] - self.routes_df.loc[trip][DEPARTURE]
         return True if duration <= self.restricted_time else False
+
+    def valid_schedule(self, schedule: list) -> bool:
+        for vehicle in schedule:
+            if not self.restricted_vehicle(vehicle):
+                return False
+        return True
 
 
 

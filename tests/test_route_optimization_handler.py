@@ -54,6 +54,16 @@ class TestRouteOptimizationHandler(TestCase):
     def test_deadhead_duration_invalid_vehicle(self):
         self.assertRaises(InvalidVehicleError, RouteOptimizationHandler.deadhead_duration, self.target, [1, 28, 27])
 
+    def test_valid_schedule(self):
+        result = self.target.valid_schedule(schedule=[[1, 27, 28]])
+        self.assertFalse(expr=result)
+        result = self.target.valid_schedule(schedule=[[1], [27, 28]])
+        self.assertTrue(expr=result)
+        result = self.target.valid_schedule(schedule=[[1, 27], [28]])
+        self.assertFalse(expr=result)
+        result = self.target.valid_schedule(schedule=[[27, 1], [28]])
+        self.assertFalse(expr=result)
+
     def test_t(self):
         result = self.target.valid_vehicle(vehicle=[])
         print(result)
