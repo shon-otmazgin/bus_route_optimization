@@ -64,6 +64,13 @@ class TestRouteOptimizationHandler(TestCase):
         result = self.target.valid_schedule(schedule=[[27, 1], [28]])
         self.assertFalse(expr=result)
 
+    def test_get_schedule_OpEx(self):
+        result = self.target.get_schedule_OpEx(schedule=[[1], [27, 28]])
+        self.assertEqual(first=4*15, second=result)
+
+    def test_get_schedule_OpEx_invalid_schedule(self):
+        self.assertRaises(InvalidScheduleError, RouteOptimizationHandler.get_schedule_OpEx, self.target, [[1, 27], [28]])
+
     def test_t(self):
         result = self.target.valid_vehicle(vehicle=[])
         print(result)

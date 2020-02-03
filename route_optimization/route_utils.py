@@ -5,6 +5,10 @@ class InvalidVehicleError(Exception):
     pass
 
 
+class InvalidScheduleError(Exception):
+    pass
+
+
 ID = 'Id'
 ORIGIN = 'Origin'
 DESTINATION = 'Destination'

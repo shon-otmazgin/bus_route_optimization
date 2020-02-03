@@ -53,6 +53,11 @@ class RouteOptimizationHandler:
                 return False
         return True
 
+    def get_schedule_OpEx(self, schedule: list) -> int:
+        if not self.valid_schedule(schedule=schedule):
+            raise InvalidScheduleError(f'Schedule {schedule} is invalid')
+        return sum([self.deadhead_duration(vehicle) for vehicle in schedule])
+
 
 
 
