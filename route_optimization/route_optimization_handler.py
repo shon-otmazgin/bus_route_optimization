@@ -48,18 +48,23 @@ class RouteOptimizationHandler:
         return duration
 
     def _restricted_vehicle(self, vehicle: list) -> bool:
+        return True if self._get_vehicle_duration(vehicle=vehicle) <= self.__restricted_time else False
+
+    def _get_vehicle_duration(self, vehicle: list) -> int:
         if not self._valid_vehicle(vehicle=vehicle):
             return False
         duration = self._deadhead_duration(vehicle=vehicle)
         for trip in vehicle:
             duration += self.__routes_df.loc[trip][ARRIVAL] - self.__routes_df.loc[trip][DEPARTURE]
-        return True if duration <= self.__restricted_time else False
+        return duration
 
     def _valid_schedule(self, schedule: list) -> bool:
+        c = set()
         for vehicle in schedule:
             if not self._restricted_vehicle(vehicle):
                 return False
-        return True
+            c.update(vehicle)
+        return c == self.__N
 
     def get_schedule_OpEx(self, schedule: list) -> int:
         if not self._valid_schedule(schedule=schedule):
@@ -75,8 +80,10 @@ class RouteOptimizationHandler:
     def reset_C(self) -> None:
         self.__C = set()
 
-    def get_D(self) -> set:
-        df = self.__neighbors_matrix.loc[self.__N-self.__C][self.__N-self.__C]
+    def get_D(self, additional=None) -> set:
+        if not additional:
+            additional = set()
+        df = self.__neighbors_matrix.loc[self.__N-self.__C-additional][self.__N-self.__C-additional]
         return set(df.loc[(df[df.columns] == False).all(axis=1)].index)
 
     def get_neighbors_matrix(self) -> pd.DataFrame:
@@ -95,7 +102,12 @@ class RouteOptimizationHandler:
         for c in self.__get_trip_candidates(trip_id=trip_id):
             if self._restricted_vehicle(vehicle=[c] + vehicle):
                 restricted_candidates.add(c)
-        return restricted_candidates
+
+        if not restricted_candidates:
+            return set()
+
+        deadheads = self.__penalty_matrix.loc[restricted_candidates][trip_id]
+        return set(deadheads[deadheads == min(deadheads)].index)
 
     def _get_matrices(self) -> (pd.DataFrame, pd.DataFrame):
         neighbors_matrix = pd.DataFrame(False, index=self.__routes_df.index, columns=self.__routes_df.index)
@@ -138,15 +150,17 @@ class RouteOptimizationHandler:
             s.append(v)
         return s
 
-    def get_schedule(self):
+    def get_schedule(self, k=5):
         s = []
         while self.__N - self.__C:
             started = time.time()
-            v = self.vehicle_beam_search()
+            v = self.vehicle_beam_search(k=k)
             print(f"New Vehicle created len of {len(v)} Took %0.2fs" % (time.time() - started))
             self.__C.update(v)
-            print(f'Covered {len(self.__C)/len(self.__N)}% of the trips...')
+            print(f'Covered {(len(self.__C)/len(self.__N))*100:0.3f}% of the trips...')
             s.append(v)
+            print(f'vehicle deadheads {(self._deadhead_duration(v) / DEADHEAD) - 2}...')
+            print(f'vehicle duration {self._get_vehicle_duration(v)}...')
             print(f'Num of vehicles {len(s)}...')
             print()
         return s
@@ -157,30 +171,41 @@ class RouteOptimizationHandler:
                 return True
         return False
 
-    def vehicle_beam_search(self):
+    def vehicle_beam_search(self, k):
         D = self.get_D()
-        vehicles = [([end_trip], 0.0) for end_trip in D]
-        k = max(3, math.ceil(math.sqrt(len(D))) + 1)
-        print(f'K is {k}')
+        df = self.__routes_df.loc[self.__N - self.__C][DEPARTURE]
+        D = set(df.nlargest(n=len(D)*3).index.to_list())
+        # D = self.__N - self.__C
+        vehicles = [[[end_trip], 2.0] for end_trip in D]
 
         while self.check(vehicles=vehicles):
             all_candidates = []
             for v in vehicles:
                 vehicle, score = v
                 restricted_candidates = self.get_restricted_candidates(vehicle=vehicle, trip_id=vehicle[0])
-                for c in restricted_candidates:
-                    v_candidate = [c] + vehicle
-                    v_candidate_score = 2 - 3*(self.__penalty_matrix.loc[c, vehicle[0]] / DEADHEAD) \
-                                          + self.__routes_df.loc[c, DEPARTURE] / \
-                                            self.__routes_df.loc[vehicle[0], DEPARTURE]
-                    candidate = (v_candidate, score + v_candidate_score)
-                    all_candidates.append(candidate)
                 if not restricted_candidates:
                     all_candidates.append(v)
+                    continue
+                for c in restricted_candidates:
+                    v_candidate = [c] + vehicle
+                    v_candidate_score =   self.__penalty_matrix.loc[c, vehicle[0]] / DEADHEAD \
+                                          - (self.__routes_df.loc[c, DEPARTURE] / \
+                                            self.__routes_df.loc[vehicle[0], DEPARTURE])
+
+                    # v_candidate_score = self.__routes_df.loc[c, DEPARTURE] / \
+                    #                     self.__routes_df.loc[vehicle[0], DEPARTURE]
+
+                    candidate = [v_candidate, score + v_candidate_score]
+                    all_candidates.append(candidate)
             # order all candidates by score
-            ordered = sorted(all_candidates, key=lambda tup: tup[1], reverse=True)
+            ordered = sorted(all_candidates, key=lambda tup: tup[1], reverse=False)
             # select k best
             vehicles = ordered[:k]
+
+        # for v in vehicles:
+        #     v[1] += +len(self.get_D(additional=set(v[0])))
+        # vehicles = sorted(vehicles, key=lambda tup: self._deadhead_duration(tup[0]), reverse=False)
+        vehicles = sorted(vehicles, key=lambda tup: len(self.get_D(set(tup[0]))), reverse=False)
         return vehicles[0][0]
 
 

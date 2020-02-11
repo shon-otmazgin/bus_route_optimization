@@ -53,22 +53,31 @@ if __name__ == '__main__':
 
     # np.random.seed(42)
     # routes_df = routes_df.sample(n=100)
-    # routes_df = routes_df.loc[:100]
-    # routes_df = routes_df.loc[[449, 21, 437, 317, 238, 153, 475]]
-    # routes_df = routes_df.loc[[487, 300, 301, 302, 303, 304, 305, 306, 307, 308, 309, 310, 332, 333, 259]]
+    # routes_df = routes_df.loc[[416, 74, 173, 302, 368, 401, 276, 56, 285, 317]]
+    # routes_df = routes_df.loc[[1, 2, 3]]
+    #
+    # routes_df.loc[3, ORIGIN] = 2
+    # routes_df.loc[3, DESTINATION] = 1
+    # routes_df.loc[3, DEPARTURE] = 100
+    # routes_df.loc[3, ARRIVAL] = 520
+    #
+    # routes_df.loc[2, ORIGIN] = 1
+    # routes_df.loc[2, DESTINATION] = 5
+    # routes_df.loc[2, DEPARTURE] = 60
+    # routes_df.loc[2, ARRIVAL] = 75
+    #
+    # routes_df.loc[1, ORIGIN] = 1
+    # routes_df.loc[1, DESTINATION] = 1
+    # routes_df.loc[1, DEPARTURE] = 1
+    # routes_df.loc[1, ARRIVAL] = 60
 
-    # routes_df = routes_df.loc[[1, 2, 3, 4, 5]]
-    # routes_df.loc[6, ORIGIN] = 1
-    # routes_df.loc[6, DESTINATION] = 1
-    # routes_df.loc[6, DEPARTURE] = 105
-    # routes_df.loc[6, ARRIVAL] = 110
-
+    #
     # routes_df.loc[5, ORIGIN] = 1
     # routes_df.loc[5, DESTINATION] = 2
     # routes_df.loc[5, DEPARTURE] = 100
     # routes_df.loc[5, ARRIVAL] = 200
     #
-    # routes_df.loc[4, ORIGIN] = 5
+    # routes_df.loc[4, ORIGIN] = 6
     # routes_df.loc[4, DESTINATION] = 1
     # routes_df.loc[4, DEPARTURE] = 70
     # routes_df.loc[4, ARRIVAL] = 80
@@ -76,24 +85,28 @@ if __name__ == '__main__':
     # routes_df.loc[3, ORIGIN] = 1
     # routes_df.loc[3, DESTINATION] = 1
     # routes_df.loc[3, DEPARTURE] = 60
-    # routes_df.loc[3, ARRIVAL] = 70
+    # routes_df.loc[3, ARRIVAL] = 75
     #
     # routes_df.loc[2, ORIGIN] = 1
     # routes_df.loc[2, DESTINATION] = 1
     # routes_df.loc[2, DEPARTURE] = 40
     # routes_df.loc[2, ARRIVAL] = 50
-    #
+
     # routes_df.loc[1, ORIGIN] = 2
     # routes_df.loc[1, DESTINATION] = 4
     # routes_df.loc[1, DEPARTURE] = 50
     # routes_df.loc[1, ARRIVAL] = 55
     # print(routes_df)
+    print(routes_df.index.to_list())
 
     route_optimizer = RouteOptimizationHandler(routes_df=routes_df, restricted_time=RESTRICTED_TIME)
     print("Starting fit...")
-    started = time.time();
+    started = time.time()
     route_optimizer.fit()
     neighbors_matrix = route_optimizer.get_neighbors_matrix()
+    penalty_matrix = route_optimizer.get_penalty_matrix()
+    # print(neighbors_matrix)
+    # print(penalty_matrix)
 
     print("Took %0.2fs" % (time.time() - started))
     print()
@@ -101,23 +114,26 @@ if __name__ == '__main__':
     print(s_random)
     print(f'Schedule is: {route_optimizer._valid_schedule(schedule=s_random)}')
     print('OpEx:', route_optimizer.get_schedule_OpEx(s_random))
-    print('Deadheads:', route_optimizer.get_schedule_OpEx(s_random)/15)
+    print('Deadheads:', route_optimizer.get_schedule_OpEx(s_random) / DEADHEAD)
     print('Num of Vehicles:', len(s_random))
     print()
 
+    k = 10
+    print(f'-------------k={k}-------------')
     started = time.time()
     route_optimizer.reset_C()
-    s = route_optimizer.get_schedule()
+    s = route_optimizer.get_schedule(k=k)
+    deadheads = route_optimizer.get_schedule_OpEx(s) / DEADHEAD
+
     print(s)
     print(f'Schedule is: {route_optimizer._valid_schedule(schedule=s)}')
-    print('OpEx:', route_optimizer.get_schedule_OpEx(s))
-    deadheads = route_optimizer.get_schedule_OpEx(s) / 15
-    vehicles = len(s)
+    print('OpEx:', route_optimizer.get_schedule_OpEx(schedule=s))
     print('Deadheads:', deadheads)
-    print('Num of Vehicles:', vehicles)
+    print('Num of Vehicles:', len(s))
     print("Took %0.2fs" % (time.time() - started))
     print()
-    print(routes_df.index.to_list())
+
     # best_s = get_best_s(routes_df=routes_df, neighbors_matrix=neighbors_matrix)
     # print(f'best s {best_s}')
     # print(f'opex {route_optimizer.get_schedule_OpEx(best_s) / 15}')
+
