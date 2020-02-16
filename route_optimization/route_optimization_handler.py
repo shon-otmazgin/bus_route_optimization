@@ -158,7 +158,7 @@ class RouteOptimizationHandler:
             print()
         return s
 
-    def check(self, vehicles):
+    def extend_vehicles(self, vehicles):
         for v in vehicles:
             if self.get_restricted_candidates(vehicle=v[0], trip_id=v[0][0]):
                 return True
@@ -167,10 +167,9 @@ class RouteOptimizationHandler:
     def vehicle_beam_search(self, k):
         df = self.__routes_df.loc[self.__N - self.__C][DEPARTURE]
         D = set(df.nlargest(n=len(self.get_D())*3).index.to_list())
-
         vehicles = [[[end_trip], 2.0] for end_trip in D]
 
-        while self.check(vehicles=vehicles):
+        while self.extend_vehicles(vehicles=vehicles):
             all_candidates = []
             for v in vehicles:
                 vehicle, score = v
@@ -178,7 +177,6 @@ class RouteOptimizationHandler:
                 if not restricted_candidates:
                     all_candidates.append(v)
                     continue
-                du = self.__routes_df.loc[restricted_candidates][ARRIVAL] - self.__routes_df.loc[restricted_candidates][DEPARTURE]
                 for c in restricted_candidates:
                     v_candidate = [c] + vehicle
 
@@ -189,6 +187,7 @@ class RouteOptimizationHandler:
 
                     candidate = [v_candidate, score + v_candidate_score]
                     all_candidates.append(candidate)
+
             # order all candidates by score
             ordered = sorted(all_candidates, key=lambda tup: tup[1], reverse=False)
             # select k best
