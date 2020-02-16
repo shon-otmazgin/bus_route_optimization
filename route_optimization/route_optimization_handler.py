@@ -1,17 +1,10 @@
-import logging
-
 import pandas as pd
 import numpy as np
-import random
 import time
-import math
-
 from route_optimization.route_utils import *
 
 
 class RouteOptimizationHandler:
-    logger = logging.getLogger('RouteOptimizationHandler')
-    logging.basicConfig(format=FORMAT)
 
     def __init__(self, routes_df: pd.DataFrame, restricted_time: int):
         self.__routes_df = routes_df
@@ -172,10 +165,9 @@ class RouteOptimizationHandler:
         return False
 
     def vehicle_beam_search(self, k):
-        D = self.get_D()
         df = self.__routes_df.loc[self.__N - self.__C][DEPARTURE]
-        D = set(df.nlargest(n=len(D)*3).index.to_list())
-        # D = self.__N - self.__C
+        D = set(df.nlargest(n=len(self.get_D())*3).index.to_list())
+
         vehicles = [[[end_trip], 2.0] for end_trip in D]
 
         while self.check(vehicles=vehicles):
@@ -186,14 +178,14 @@ class RouteOptimizationHandler:
                 if not restricted_candidates:
                     all_candidates.append(v)
                     continue
+                du = self.__routes_df.loc[restricted_candidates][ARRIVAL] - self.__routes_df.loc[restricted_candidates][DEPARTURE]
                 for c in restricted_candidates:
                     v_candidate = [c] + vehicle
-                    v_candidate_score =   self.__penalty_matrix.loc[c, vehicle[0]] / DEADHEAD \
-                                          - (self.__routes_df.loc[c, DEPARTURE] / \
-                                            self.__routes_df.loc[vehicle[0], DEPARTURE])
 
-                    # v_candidate_score = self.__routes_df.loc[c, DEPARTURE] / \
-                    #                     self.__routes_df.loc[vehicle[0], DEPARTURE]
+                    # local evaluation by deadhead and proportion of departure time.
+                    v_candidate_score = self.__penalty_matrix.loc[c, vehicle[0]] / DEADHEAD \
+                                        - (self.__routes_df.loc[c, DEPARTURE] / \
+                                           self.__routes_df.loc[vehicle[0], DEPARTURE])
 
                     candidate = [v_candidate, score + v_candidate_score]
                     all_candidates.append(candidate)
@@ -202,9 +194,7 @@ class RouteOptimizationHandler:
             # select k best
             vehicles = ordered[:k]
 
-        # for v in vehicles:
-        #     v[1] += +len(self.get_D(additional=set(v[0])))
-        # vehicles = sorted(vehicles, key=lambda tup: self._deadhead_duration(tup[0]), reverse=False)
+        # global evaluation by num of end_trips
         vehicles = sorted(vehicles, key=lambda tup: len(self.get_D(set(tup[0]))), reverse=False)
         return vehicles[0][0]
 

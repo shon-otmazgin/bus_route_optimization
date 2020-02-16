@@ -51,8 +51,9 @@ def random_schedule():
 if __name__ == '__main__':
     routes_df = pd.read_csv('dataset/service_trips.csv', index_col=0)
 
-    np.random.seed(42)
-    routes_df = routes_df.sample(n=100)
+    # np.random.seed(42)
+    # routes_df = routes_df.sample(n=100)
+    routes_df = routes_df.loc[[1, 2, 3, 4, 5, 20, 21, 38, 39, 40, 41, 56, 74, 81, 82, 87, 88, 89, 90, 91, 92, 101, 103, 105, 133, 134, 135, 136, 144, 145, 146, 147, 155, 156, 157, 158, 166, 167, 168, 169, 188, 189, 190, 191, 204, 246, 250, 254, 255, 260, 261, 262, 264, 265, 266, 267, 268, 269, 335, 336, 337, 341, 342, 343, 347, 348, 349, 350, 351, 352, 356, 357, 358, 362, 363, 364, 368, 369, 381, 382, 383, 400, 401, 414, 415, 429, 431, 433, 435, 449, 450, 463, 464, 476, 488, 489, 490, 492, 493, 494, 495, 496, 497, 498, 499, 500, 501, 503]]
 
     route_optimizer = RouteOptimizationHandler(routes_df=routes_df, restricted_time=RESTRICTED_TIME)
     print("Starting fit...")
@@ -72,8 +73,10 @@ if __name__ == '__main__':
     print('Num of Vehicles:', len(s_random))
     print()
 
+    start = 9
+    end = 10
     results = []
-    for k in range(2, 30):
+    for k in range(start, end):
         print(f'-------------k={k}-------------')
         started = time.time()
         route_optimizer.reset_C()
@@ -89,7 +92,7 @@ if __name__ == '__main__':
         results.append((s , time.time() - started))
         print()
 
-    for k in range(2, 30):
-        print(f'k={k} deadhead: {route_optimizer.get_schedule_OpEx(results[k-2][0]) / DEADHEAD}, time: {results[k-2][1]:0.2f}s')
+    for k in range(start, end):
+        print(f'k={k} deadhead:{route_optimizer.get_schedule_OpEx(results[k-start][0]) / DEADHEAD}, time: {results[k-start][1]:0.2f}s')
 
 
