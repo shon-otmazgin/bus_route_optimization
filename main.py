@@ -25,8 +25,8 @@ def get_k_avg_random_schedule(k=20):
 if __name__ == '__main__':
     routes_df = pd.read_csv('dataset/service_trips.csv', index_col=0)
 
-    np.random.seed(42)
-    routes_df = routes_df.sample(n=100)
+    # np.random.seed(42)
+    # routes_df = routes_df.sample(n=100)
 
     route_optimizer = RouteOptimizationHandler(routes_df=routes_df, restricted_time=RESTRICTED_TIME)
     print("Starting fit...")
@@ -46,8 +46,8 @@ if __name__ == '__main__':
     print("Random Schedule Took %0.2fs" % (time.time() - started))
     print()
 
-    start = 9
-    end = 10
+    start = 10
+    end = 11
     results = []
     for k in range(start, end):
         print(f'-------------k={k}-------------')
