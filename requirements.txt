@@ -8,7 +8,7 @@
 --trusted-host pypi.org
 --trusted-host files.pythonhosted.org
 
-numpy==1.18.1
+numpy==1.22.0
 pandas==1.0.0
 python-dateutil==2.8.1    # via pandas
 pytz==2019.3              # via pandas
